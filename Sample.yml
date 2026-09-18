@@ -2,6 +2,7 @@
 - name: my playbook
   hosts: 15.252.211.18
   become: true
+  gather_facts: false
   tasks:
     - name: create a file
       ansible.builtin.file:
