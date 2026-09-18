@@ -1,0 +1,44 @@
+---
+- name: my playbook
+  hosts: 15.252.211.18
+  tasks:
+    - name: create a file
+      ansible.builtin.file:
+         path: /home/ansible/sample.txt
+         state: touch
+
+- name: second play
+  hosts: 13.205.72.64
+  tasks:
+    - name: add a line in file
+      ansible.builtin.lineinfile:
+         path: /home/ansible/sample.txt
+         line : welcome it is sample
+         state : present
+    - name: install httpd
+      become: true
+      ansible.builtin.dnf:
+        name: httpd
+        state: latest
+    - name: start httpd service
+      become: true
+      ansible.builtin.systemd_service:
+        name: httpd
+        state: started
+        enabled: true
+
+- name: To check version
+  hosts: all
+  tasks:
+    - name: To check version
+      ansible.builtin.shell:
+        cmd: cat /etc/os-release
+      register: pluto
+      tags:
+        - tag3
+
+    - name: Display OS version
+      ansible.builtin.debug:
+        var: pluto.stdout
+      tags:
+        - tag3
