@@ -1,6 +1,6 @@
 ---
 - name: my playbook
-  hosts: 15.252.211.18
+  hosts: all
   become: true
   gather_facts: false
   tasks:
@@ -8,10 +8,6 @@
       ansible.builtin.file:
          path: /home/ansible/sample.txt
          state: touch
-
-- name: second play
-  hosts: 13.205.72.64
-  tasks:
     - name: add a line in file
       ansible.builtin.lineinfile:
          path: /home/ansible/sample.txt
