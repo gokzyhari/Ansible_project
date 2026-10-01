@@ -187,3 +187,26 @@
     - name: Print final summary report
       debug:
         msg: "{{ summary_report.split('\n') }}"
+
+        # Separate play for sending the consolidated report
+- name: Send consolidated report
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    gmail_app_password: "nvwlsxfauuabuwyn"
+
+  tasks:
+    - name: Send consolidated playbook results via Gmail
+      mail:
+        host: smtp.gmail.com
+        port: 587
+        username: "princeythurai@gmail.com"
+        password: "{{ gmail_app_password }}"
+        to:
+          - gokulhariarun2001@gmail.com
+          - prasath10416@gmail.com
+          - madheshravi2001@gmail.com
+        subject: "Consolidated Ansible Run Report"
+        body: "{{ lookup('file', '/home/ansible/testing.log') }}"
+
