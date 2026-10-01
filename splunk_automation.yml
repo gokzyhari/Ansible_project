@@ -185,8 +185,8 @@
           ===============================================================
 
     - name: Print final summary report
-      debug:
-        msg: "{{ summary_report.split('\n') }}"
+      debug: |
+        {{ summary_report }}
 
         # Separate play for sending the consolidated report
 - name: Send consolidated report
