@@ -186,7 +186,7 @@
 
     - name: Print final summary report
       debug:
-        {{ summary_report }}
+        msg: "{{ summary_report }}"
 
         # Separate play for sending the consolidated report
 - name: Send consolidated report
