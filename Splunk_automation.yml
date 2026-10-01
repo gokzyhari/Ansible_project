@@ -190,8 +190,6 @@
 
 # Separate play for sending the consolidated report
 - name: Send consolidated report
-  hosts: localhost
-  connection: local
   gather_facts: false
   vars:
     gmail_app_password: "nvwlsxfauuabuwyn"
