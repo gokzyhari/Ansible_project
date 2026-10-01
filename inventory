@@ -1,3 +1,5 @@
-[slaves]
-15.252.211.18 ansible_user=ansible
-13.205.72.64 ansible_user=ansible
+[host]
+13.232.28.81
+#13.235.108.34
+[local]
+localhost ansible_connection=local
