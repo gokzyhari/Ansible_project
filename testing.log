@@ -1,0 +1,246 @@
+
+PLAY [Splunk post checks automation] *******************************************
+
+TASK [Check hot directory] *****************************************************
+ok: [13.232.28.81]
+ok: [13.235.108.34]
+
+TASK [Check cold directory] ****************************************************
+ok: [13.232.28.81]
+ok: [13.235.108.34]
+
+TASK [Find disk space] *********************************************************
+ok: [13.232.28.81]
+ok: [13.235.108.34]
+
+TASK [Display disk space output] ***********************************************
+ok: [13.232.28.81] => {
+    "disk_space.stdout_lines": [
+        "Filesystem      Size  Used Avail Use% Mounted on",
+        "/dev/nvme0n1p1  8.0G  1.7G  6.3G  21% /",
+        "Filesystem      Size  Used Avail Use% Mounted on",
+        "/dev/nvme0n1p1  8.0G  1.7G  6.3G  21% /"
+    ]
+}
+ok: [13.235.108.34] => {
+    "disk_space.stdout_lines": [
+        "Filesystem      Size  Used Avail Use% Mounted on",
+        "/dev/nvme0n1p1  8.0G  1.7G  6.3G  21% /",
+        "Filesystem      Size  Used Avail Use% Mounted on",
+        "/dev/nvme0n1p1  8.0G  1.7G  6.3G  21% /"
+    ]
+}
+
+TASK [Display ownership of splunk dir] *****************************************
+ok: [13.232.28.81]
+ok: [13.235.108.34]
+
+TASK [Display ownership output] ************************************************
+ok: [13.232.28.81] => {
+    "dir_ownership.stdout_lines": [
+        "drwxrwxrwx. 2 ansible ansible 69 Oct 19 20:41 /opt/splunk/data/hot",
+        "drwxrwxrwx. 2 ansible root 69 Oct 19 20:41 /opt/splunk/data/cold"
+    ]
+}
+ok: [13.235.108.34] => {
+    "dir_ownership.stdout_lines": [
+        "drwxrwxrwx. 2 ansible root 69 Oct 19 20:42 /opt/splunk/data/hot",
+        "drwxrwxrwx. 2 ansible root 69 Oct 19 20:42 /opt/splunk/data/cold"
+    ]
+}
+
+TASK [Verify write access on splunk hot dir] ***********************************
+ok: [13.232.28.81]
+ok: [13.235.108.34]
+
+TASK [Display write access success on hot dir] *********************************
+ok: [13.232.28.81] => {
+    "msg": "Write access confirmed on /opt/splunk/data/hot"
+}
+ok: [13.235.108.34] => {
+    "msg": "Write access confirmed on /opt/splunk/data/hot"
+}
+
+TASK [Display write access failure on hot dir] *********************************
+skipping: [13.232.28.81]
+skipping: [13.235.108.34]
+
+TASK [Hot directory missing] ***************************************************
+skipping: [13.232.28.81]
+skipping: [13.235.108.34]
+
+TASK [Verify write access on splunk cold dir] **********************************
+ok: [13.232.28.81]
+ok: [13.235.108.34]
+
+TASK [Display write access success on cold dir] ********************************
+ok: [13.232.28.81] => {
+    "msg": "Write access confirmed on /opt/splunk/data/cold"
+}
+ok: [13.235.108.34] => {
+    "msg": "Write access confirmed on /opt/splunk/data/cold"
+}
+
+TASK [Display write access failure on cold dir] ********************************
+skipping: [13.232.28.81]
+skipping: [13.235.108.34]
+
+TASK [Cold directory missing] **************************************************
+skipping: [13.232.28.81]
+skipping: [13.235.108.34]
+
+TASK [Print current location] **************************************************
+ok: [13.232.28.81]
+ok: [13.235.108.34]
+
+TASK [Print current working area] **********************************************
+ok: [13.232.28.81] => {
+    "current_working_dir.stdout_lines": [
+        "/home/ansible",
+        "total 4",
+        "-rw-rw-r--. 1 ansible ansible 50 Oct  1 18:51 testing.log"
+    ]
+}
+ok: [13.235.108.34] => {
+    "current_working_dir.stdout_lines": [
+        "/home/ansible",
+        "total 0"
+    ]
+}
+
+TASK [Remove files under hot dir] **********************************************
+ok: [13.232.28.81]
+ok: [13.235.108.34]
+
+TASK [Cleanup completed under hot dir] *****************************************
+ok: [13.232.28.81] => {
+    "msg": "Cleanup completed under /opt/splunk/data/hot"
+}
+ok: [13.235.108.34] => {
+    "msg": "Cleanup completed under /opt/splunk/data/hot"
+}
+
+TASK [Cleanup failed under hot dir] ********************************************
+skipping: [13.232.28.81]
+skipping: [13.235.108.34]
+
+TASK [Cleanup skipped under hot dir] *******************************************
+skipping: [13.232.28.81]
+skipping: [13.235.108.34]
+
+TASK [Check if splunk indexer exists] ******************************************
+ok: [13.232.28.81]
+ok: [13.235.108.34]
+
+TASK [Report Splunk indexer status] ********************************************
+ok: [13.232.28.81] => {
+    "msg": "splunk indexer exists"
+}
+ok: [13.235.108.34] => {
+    "msg": "splunk indexer exists"
+}
+
+TASK [Report Splunk indexer missing] *******************************************
+skipping: [13.232.28.81]
+skipping: [13.235.108.34]
+
+TASK [Remove files under cold dir ignoring splunk_idx] *************************
+ok: [13.232.28.81]
+ok: [13.235.108.34]
+
+TASK [Cleanup completed under cold dir] ****************************************
+ok: [13.232.28.81] => {
+    "msg": "Cleanup completed under /opt/splunk/data/cold ignoring splunk_idx"
+}
+ok: [13.235.108.34] => {
+    "msg": "Cleanup completed under /opt/splunk/data/cold ignoring splunk_idx"
+}
+
+TASK [Cleanup failed under cold dir] *******************************************
+skipping: [13.232.28.81]
+skipping: [13.235.108.34]
+
+TASK [Build final summary report] **********************************************
+ok: [13.235.108.34]
+ok: [13.232.28.81]
+
+TASK [Print final summary report] **********************************************
+ok: [13.232.28.81] => {
+    "msg": [
+        "================= SPLUNK POST CHECK SUMMARY =================",
+        "Host: 13.232.28.81",
+        "",
+        "Disk space:",
+        "Filesystem      Size  Used Avail Use% Mounted on",
+        "/dev/nvme0n1p1  8.0G  1.7G  6.3G  21% /",
+        "Filesystem      Size  Used Avail Use% Mounted on",
+        "/dev/nvme0n1p1  8.0G  1.7G  6.3G  21% /",
+        "",
+        "Ownership:",
+        "drwxrwxrwx. 2 ansible ansible 69 Oct 19 20:41 /opt/splunk/data/hot",
+        "drwxrwxrwx. 2 ansible root 69 Oct 19 20:41 /opt/splunk/data/cold",
+        "",
+        "Write access - hot dir:",
+        "Write access confirmed on /opt/splunk/data/hot",
+        "",
+        "Write access - cold dir:",
+        "Write access confirmed on /opt/splunk/data/cold",
+        "",
+        "Cleanup - hot dir:",
+        "Completed",
+        "",
+        "Splunk indexer status:",
+        "Exists",
+        "",
+        "Cleanup - cold dir:",
+        "Completed (splunk_idx preserved)",
+        "",
+        "===============================================================",
+        ""
+    ]
+}
+ok: [13.235.108.34] => {
+    "msg": [
+        "================= SPLUNK POST CHECK SUMMARY =================",
+        "Host: 13.235.108.34",
+        "",
+        "Disk space:",
+        "Filesystem      Size  Used Avail Use% Mounted on",
+        "/dev/nvme0n1p1  8.0G  1.7G  6.3G  21% /",
+        "Filesystem      Size  Used Avail Use% Mounted on",
+        "/dev/nvme0n1p1  8.0G  1.7G  6.3G  21% /",
+        "",
+        "Ownership:",
+        "drwxrwxrwx. 2 ansible root 69 Oct 19 20:42 /opt/splunk/data/hot",
+        "drwxrwxrwx. 2 ansible root 69 Oct 19 20:42 /opt/splunk/data/cold",
+        "",
+        "Write access - hot dir:",
+        "Write access confirmed on /opt/splunk/data/hot",
+        "",
+        "Write access - cold dir:",
+        "Write access confirmed on /opt/splunk/data/cold",
+        "",
+        "Cleanup - hot dir:",
+        "Completed",
+        "",
+        "Splunk indexer status:",
+        "Exists",
+        "",
+        "Cleanup - cold dir:",
+        "Completed (splunk_idx preserved)",
+        "",
+        "===============================================================",
+        ""
+    ]
+}
+
+PLAY [Send consolidated report] ************************************************
+
+TASK [Send consolidated playbook results via Gmail] ****************************
+ok: [localhost]
+
+PLAY RECAP *********************************************************************
+13.232.28.81               : ok=20   changed=0    unreachable=0    failed=0    skipped=8    rescued=0    ignored=0   
+13.235.108.34              : ok=20   changed=0    unreachable=0    failed=0    skipped=8    rescued=0    ignored=0   
+localhost                  : ok=1    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+

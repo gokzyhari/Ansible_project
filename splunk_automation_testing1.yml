@@ -1,0 +1,279 @@
+---
+- name: Splunk post checks automation
+  hosts: host
+  gather_facts: false
+  become: true
+
+  tasks:
+
+    - name: Check hot directory
+      stat:
+        path: /opt/splunk/data/hot
+      register: hot_dir
+
+    - name: Check cold directory
+      stat:
+        path: /opt/splunk/data/cold
+      register: cold_dir
+
+    - name: Find disk space
+      shell: |
+        if [ -d /opt/splunk/data/hot ]; then
+          df -hP /opt/splunk/data/hot
+        else
+          echo "/opt/splunk/data/hot NOT FOUND"
+        fi
+
+        if [ -d /opt/splunk/data/cold ]; then
+          df -hP /opt/splunk/data/cold
+        else
+          echo "/opt/splunk/data/cold NOT FOUND"
+        fi
+      register: disk_space
+      changed_when: false
+
+    - name: Display disk space output
+      debug:
+        var: disk_space.stdout_lines
+
+    - name: Display ownership of splunk dir
+      shell: |
+        [ -d /opt/splunk/data/hot ] && ls -ld /opt/splunk/data/hot || echo "/opt/splunk/data/hot NOT FOUND"
+        [ -d /opt/splunk/data/cold ] && ls -ld /opt/splunk/data/cold || echo "/opt/splunk/data/cold NOT FOUND"
+      register: dir_ownership
+      changed_when: false
+
+    - name: Display ownership output
+      debug:
+        var: dir_ownership.stdout_lines
+
+    - name: Verify write access on splunk hot dir
+      shell: |
+        touch /opt/splunk/data/hot/test
+        rm -f /opt/splunk/data/hot/test
+      register: hot_write_check
+      failed_when: false
+      changed_when: false
+      when: hot_dir.stat.exists
+
+    - name: Display write access success on hot dir
+      debug:
+        msg: "Write access confirmed on /opt/splunk/data/hot"
+      when:
+        - hot_dir.stat.exists
+        - hot_write_check.rc == 0
+
+    - name: Display write access failure on hot dir
+      debug:
+        msg: "FAILED to create file in /opt/splunk/data/hot. Error: {{ hot_write_check.stderr }}"
+      when:
+        - hot_dir.stat.exists
+        - hot_write_check.rc != 0
+
+    - name: Hot directory missing
+      debug:
+        msg: "/opt/splunk/data/hot NOT FOUND"
+      when: not hot_dir.stat.exists
+
+    - name: Verify write access on splunk cold dir
+      shell: |
+        touch /opt/splunk/data/cold/test
+        rm -f /opt/splunk/data/cold/test
+      register: cold_write_check
+      failed_when: false
+      changed_when: false
+      when: cold_dir.stat.exists
+
+    - name: Display write access success on cold dir
+      debug:
+        msg: "Write access confirmed on /opt/splunk/data/cold"
+      when:
+        - cold_dir.stat.exists
+        - cold_write_check.rc == 0
+
+    - name: Display write access failure on cold dir
+      debug:
+        msg: "FAILED to create file in /opt/splunk/data/cold. Error: {{ cold_write_check.stderr }}"
+      when:
+        - cold_dir.stat.exists
+        - cold_write_check.rc != 0
+
+    - name: Cold directory missing
+      debug:
+        msg: "/opt/splunk/data/cold NOT FOUND"
+      when: not cold_dir.stat.exists
+
+    - name: Print current location
+      shell: |
+        pwd
+        ls -lrt
+      register: current_working_dir
+      changed_when: false
+
+    - name: Print current working area
+      debug:
+        var: current_working_dir.stdout_lines
+
+    - name: Remove files under hot dir
+      shell: rm -rf /opt/splunk/data/hot/*
+      register: cleanup_hot_dir
+      failed_when: false
+      changed_when: false
+      when:
+        - hot_dir.stat.exists
+        - hot_write_check.rc == 0
+
+    - name: Cleanup completed under hot dir
+      debug:
+        msg: "Cleanup completed under /opt/splunk/data/hot"
+      when:
+        - cleanup_hot_dir is defined
+        - cleanup_hot_dir.rc == 0
+
+    - name: Cleanup failed under hot dir
+      debug:
+        msg: "Cleanup failed under /opt/splunk/data/hot"
+      when:
+        - cleanup_hot_dir is defined
+        - cleanup_hot_dir.rc != 0
+
+    - name: Cleanup skipped under hot dir
+      debug:
+        msg: "Cleanup skipped under /opt/splunk/data/hot"
+      when:
+        - not hot_dir.stat.exists or
+          (hot_dir.stat.exists and hot_write_check.rc != 0)
+
+    - name: Check if splunk indexer exists
+      stat:
+        path: /opt/splunk/data/cold/splunk_idx
+      register: splunk_cold
+      when: cold_dir.stat.exists
+
+    - name: Report Splunk indexer status
+      debug:
+        msg: "splunk indexer exists"
+      when:
+        - cold_dir.stat.exists
+        - splunk_cold.stat.exists
+
+    - name: Report Splunk indexer missing
+      debug:
+        msg: "splunk indexer does NOT exist, skipping cleanup. Please install indexer"
+      when:
+        - cold_dir.stat.exists
+        - not splunk_cold.stat.exists
+
+    - name: Remove files under cold dir ignoring splunk_idx
+      shell: |
+        find /opt/splunk/data/cold -mindepth 1 -maxdepth 1 ! -name splunk_idx -exec rm -rf {} +
+      register: cleanup_cold_dir
+      failed_when: false
+      changed_when: false
+      when:
+        - cold_dir.stat.exists
+        - splunk_cold.stat.exists
+        - cold_write_check.rc == 0
+
+    - name: Cleanup completed under cold dir
+      debug:
+        msg: "Cleanup completed under /opt/splunk/data/cold ignoring splunk_idx"
+      when:
+        - cleanup_cold_dir is defined
+        - cleanup_cold_dir.rc == 0
+
+    - name: Cleanup failed under cold dir
+      debug:
+        msg: "Cleanup failed under /opt/splunk/data/cold. Error: {{ cleanup_cold_dir.stderr }}"
+      when:
+        - cleanup_cold_dir is defined
+        - cleanup_cold_dir.rc != 0
+
+    - name: Build final summary report
+      set_fact:
+        summary_report: |
+          ================= SPLUNK POST CHECK SUMMARY =================
+          Host: {{ inventory_hostname }}
+
+          Disk space:
+          {{ disk_space.stdout }}
+
+          Ownership:
+          {{ dir_ownership.stdout }}
+
+          Write access - hot dir:
+          {% if not hot_dir.stat.exists %}
+          NOT FOUND
+          {% elif hot_write_check.rc == 0 %}
+          Write access confirmed on /opt/splunk/data/hot
+          {% else %}
+          FAILED - {{ hot_write_check.stderr }}
+          {% endif %}
+
+          Write access - cold dir:
+          {% if not cold_dir.stat.exists %}
+          NOT FOUND
+          {% elif cold_write_check.rc == 0 %}
+          Write access confirmed on /opt/splunk/data/cold
+          {% else %}
+          FAILED - {{ cold_write_check.stderr }}
+          {% endif %}
+
+          Cleanup - hot dir:
+          {% if not hot_dir.stat.exists %}
+          SKIPPED (directory not found)
+          {% elif hot_write_check.rc != 0 %}
+          SKIPPED (write access failed)
+          {% else %}
+          {{ 'Completed' if cleanup_hot_dir.rc == 0 else 'FAILED' }}
+          {% endif %}
+
+          Splunk indexer status:
+          {% if not cold_dir.stat.exists %}
+          COLD DIRECTORY NOT FOUND
+          {% elif splunk_cold.stat.exists %}
+          Exists
+          {% else %}
+          MISSING - please install indexer
+          {% endif %}
+
+          Cleanup - cold dir:
+          {% if not cold_dir.stat.exists %}
+          SKIPPED (directory not found)
+          {% elif not splunk_cold.stat.exists %}
+          SKIPPED (indexer missing)
+          {% elif cold_write_check.rc != 0 %}
+          SKIPPED (write access failed)
+          {% else %}
+          {{ 'Completed (splunk_idx preserved)' if cleanup_cold_dir.rc == 0 else 'FAILED - ' + (cleanup_cold_dir.stderr | default('')) }}
+          {% endif %}
+
+          ===============================================================
+
+    - name: Print final summary report
+      debug:
+        msg: "{{ summary_report.split('\n') }}"
+
+# Separate play for sending the consolidated report
+
+- name: Send consolidated report
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    gmail_app_password: "nvwlsxfauuabuwyn"
+
+  tasks:
+    - name: Send consolidated playbook results via Gmail
+      mail:
+        host: smtp.gmail.com
+        port: 587
+        username: "princeythurai@gmail.com"
+        password: "{{ gmail_app_password }}"
+        to:
+          - gokulhariarun2001@gmail.com
+          - prasath10416@gmail.com
+          - madheshravi2001@gmail.com
+        subject: "Consolidated Ansible Run Report"
+        body: "{{ lookup('file', '/home/ansible/testing.log') }}"
