@@ -1,5 +1,5 @@
 [host]
 13.232.28.81
-#13.235.108.34
+13.235.108.34
 [local]
 localhost ansible_connection=local
