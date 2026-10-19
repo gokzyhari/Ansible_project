@@ -276,4 +276,4 @@
           - prasath10416@gmail.com
           - madheshravi2001@gmail.com
         subject: "Consolidated Ansible Run Report"
-        body: "{{ lookup('file', '/home/ansible/testing.log') }}"
+        body: "{{ lookup('file', '/home/ansible/jenkins-deploy/testing.log') }}"
